@@ -52,13 +52,23 @@ internal fun App() = AppTheme {
         Message(names.random(), body)
     }
 
-    LazyColumn {
-        items(messages) { message ->
-            Column(modifier = Modifier.padding(10.dp)) {
-                Row(modifier = Modifier.background(Color.LightGray, RoundedCornerShape(percent = 10)).padding(20.dp)) {
-                    Text(message.author + "\n" + message.body)
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(modifier = Modifier.fillMaxSize()
+        ) {
+            items(messages) { message ->
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Row(modifier = Modifier.background(Color.LightGray, RoundedCornerShape(percent = 10)).padding(20.dp).fillMaxWidth()
+                    ) {
+                        Text(message.author + "\n" + message.body)
+                    }
                 }
             }
+        }
+
+        Button(onClick = { },
+            modifier = Modifier.padding(10.dp).align(Alignment.BottomEnd).width(60.dp).height(60.dp)
+        ) {
+            Text("+")
         }
     }
 }
