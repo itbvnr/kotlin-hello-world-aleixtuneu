@@ -12,6 +12,22 @@ import org.jetbrains.compose.reload.DevelopmentEntryPoint
 @Composable
 internal fun App() = AppTheme {
     Box(Modifier.fillMaxSize()){
-        Text("Your app goes here!", Modifier.align(Alignment.Center))
+        Column(modifier = Modifier.fillMaxSize()){
+            var text = remember { mutableStateOf("Good ?!") }
+
+            Text(text.value)
+
+            Button(onClick = {
+                text.value = "Good Morning!"
+            }) {
+                Text("Good Morning!")
+            }
+
+            Button(onClick = {
+                text.value = "Good Night!"
+            }) {
+                Text("Good Night!")
+            }
+        }
     }
 }
