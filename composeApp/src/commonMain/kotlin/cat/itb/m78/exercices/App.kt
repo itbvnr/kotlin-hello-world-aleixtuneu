@@ -12,6 +12,19 @@ import org.jetbrains.compose.reload.DevelopmentEntryPoint
 @Composable
 internal fun App() = AppTheme {
     Box(Modifier.fillMaxSize()){
-        Text("Your app goes here!", Modifier.align(Alignment.Center))
+        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            // imatge
+
+
+            // botó New game
+            Button(onClick = {  }) {
+                Text("New Game")
+            }
+
+            // botó Settings
+            Button(onClick = {  }) {
+                Text("Settings")
+            }
+        }
     }
 }
