@@ -1,47 +1,68 @@
 package cat.itb.m78.exercices
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextDirection
-import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cat.itb.m78.exercices.theme.AppTheme
 import com.russhwolf.settings.Settings
-import kotlinx.serialization.Serializable
-import com.russhwolf.settings.set
 
-// Iniciar Settings
-val settings: Settings = Settings()
+
+private const val KEY ="NAME_K"
+object MyNameStorage{
+    val settings = Settings()
+    fun getName() : String? = settings.getStringOrNull(KEY)
+    fun store(name: String){
+        settings.putString(KEY, name)
+    }
+}
+
+class RememberMeViewModel : ViewModel(){
+    val myDataStorage = MyNameStorage
+    val storedData = mutableStateOf(myDataStorage.getName())
+    val nameField = mutableStateOf(myDataStorage.getName()?:"")
+
+    fun updateNameField(name: String){
+        nameField.value = name
+    }
+
+    fun store(){
+        myDataStorage.store(nameField.value)
+        storedData.value = myDataStorage.getName()
+    }
+}
+
+@Composable
+fun RememberMyNameScreen(){
+    val viewModel = viewModel { RememberMeViewModel() }
+    RememberMyNameScreen(viewModel.storedData.value, viewModel.nameField.value, viewModel::updateNameField, viewModel::store)
+}
+
+@Composable
+fun RememberMyNameScreen(myData: String?, name: String, updateName: (String) -> Unit, save: ()->Unit) {
+    Column {
+        if(myData!=null){
+            Row{
+                Text("Hello " )
+                Text(myData, fontWeight = FontWeight.Bold)
+
+            }
+
+        }
+        OutlinedTextField(name, updateName)
+        Button(save){
+            Text("Save")
+        }
+    }
+}
 
 @Composable
 internal fun App() = AppTheme {
-    val savedName = settings.getStringOrNull("user_name") ?: ""  // Recupera el nom des de Settings
-    val (name, setName) = remember { mutableStateOf(savedName) }
-    val (isNameSaved, setIsNameSaved) = remember { mutableStateOf(false) }  // Estat per controlar si el nom s'ha guardat
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        // Mostrar el el nom si existeix
-        Text(text = "Hola $name!")
-
-
-        // Escriure el nom
-        TextField(
-            value = name,
-            onValueChange = { newValue -> setName(newValue) },  // Actualitza el nom
-            modifier = Modifier.padding(top = 8.dp)
-        )
-
-        // Botó per guardar el nom
-        Button(
-            onClick = {
-                settings["user_name"] = name // Guardar el nom a Settings
-                setIsNameSaved(true)  // Guardar el nom i actualitzar el text
-            },
-            modifier = Modifier.padding(top = 8.dp)
-        ) {
-            Text(text = "Save")
-        }
-    }
+    RememberMyNameScreen()
 }
