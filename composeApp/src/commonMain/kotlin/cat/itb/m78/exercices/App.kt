@@ -1,6 +1,5 @@
 package cat.itb.m78.exercices
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,7 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -31,6 +29,20 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.jetbrains.compose.reload.DevelopmentEntryPoint
+import com.russhwolf.settings.Settings
+
+
+//
+private const val KEY = "EMBASSAMENT_K"
+
+object EmbassamentPreferitStorage {
+    val settings = Settings()
+    fun getEmbassamentPreferit() : String? = settings.getStringOrNull(KEY)
+    fun store(embassamentPreferit: String) {
+        settings.putString(KEY, embassamentPreferit)
+    }
+}
+//
 
 // Definció de destins
 object Destination {
@@ -91,8 +103,20 @@ object EmbassamentsApi {
 fun EmbassamentsScreen(navigateToEmbassamentInfoScreen: (String) -> Unit) {
     val viewModel = viewModel { EmbassamentsViewModel() }
     val embassaments = viewModel.embassaments.value
-
-    val embassamentsDistinct = embassaments.distinctBy { it.estaci }
+    // Obtenir embassament preferit
+    val embassamentPreferit = EmbassamentPreferitStorage.getEmbassamentPreferit()
+    // Ordenar la llista
+    val embassamentsDistinct = remember(embassaments, embassamentPreferit) {
+        val distinctList = embassaments.distinctBy { it.estaci }.toMutableList()
+        embassamentPreferit?.let { preferit -> // si embassamentPreferit no es null
+            val index = distinctList.indexOfFirst { it.estaci == preferit }
+            if (index > 0) {
+                val item = distinctList.removeAt(index)
+                distinctList.add(0, item) // Mou al primer
+            }
+        }
+        distinctList.toList()
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -120,7 +144,10 @@ fun EmbassamentsScreen(navigateToEmbassamentInfoScreen: (String) -> Unit) {
                             // Nom
                             ClickableText(
                                 text = AnnotatedString("${embassament.estaci}"),
-                                onClick = { navigateToEmbassamentInfoScreen(embassament.estaci) }
+                                onClick = {
+                                    EmbassamentPreferitStorage.store(embassament.estaci)
+                                    navigateToEmbassamentInfoScreen(embassament.estaci)
+                                }
                             )
                         }
                     }
@@ -135,7 +162,6 @@ fun EmbassamentsScreen(navigateToEmbassamentInfoScreen: (String) -> Unit) {
 fun EmbassamentInfoScreen(embassamentId: String) {
     val viewModel = viewModel { EmbassamentsViewModel() }
     val embassaments = viewModel.embassaments.value
-
     val embassamentsInfo = embassaments.filter { it.estaci == embassamentId }
 
     if (embassamentsInfo != null) {
@@ -143,32 +169,37 @@ fun EmbassamentInfoScreen(embassamentId: String) {
             modifier = Modifier.padding(16.dp).fillMaxWidth()
         ) {
             items(embassamentsInfo) { embassamentInfo ->
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
-                    // Dia
-                    Text( text = "Dia: ${embassamentInfo.dia}")
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        // Dia
+                        Text( text = "Dia: ${embassamentInfo.dia}")
 
-                    // Nom
-                    // Text( text = "Nom: ${embassamentInfo.estaci}")
+                        // Nom
+                        // Text( text = "Nom: ${embassamentInfo.estaci}")
 
-                    // Nivell absolut
-                    Text( text = "Nivell Absolut: ${embassamentInfo.nivell_absolut}")
+                        // Nivell absolut
+                        Text( text = "Nivell Absolut: ${embassamentInfo.nivell_absolut}")
 
-                    // Percentatge volum embassat
-                    Text( text = "Percentatge de Volum Embassat: ${embassamentInfo.percentatge_volum_embassat}")
+                        // Percentatge volum embassat
+                        Text( text = "Percentatge de Volum Embassat: ${embassamentInfo.percentatge_volum_embassat}")
 
-                    // Volum embassat
-                    Text( text = "Volum Embassat: ${embassamentInfo.volum_embassat}")
+                        // Volum embassat
+                        Text( text = "Volum Embassat: ${embassamentInfo.volum_embassat}")
+
+                    }
                 }
             }
-
         }
     } else {
         Text("Embassament no trobat.")
     }
-
-
 }
 
 @Composable
